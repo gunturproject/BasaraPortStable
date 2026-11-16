@@ -106,7 +106,8 @@ final class AppSettings {
     // --- Low-End preset -----------------------------------------------------------------------------
     /** Every setting the Low-End preset may change; what they were before is kept for Undo. */
     static final String[] LOW_END_KEYS = {"display_lines", "resolution_scale", "texture_filter", "fsr_on",
-        "frameskip", "dynamic_resolution", "hd_textures", "show_fps", "overlay_items", "frame_graph", "fps_lock_30"};
+        "frameskip", "dynamic_resolution", "hd_textures", "show_fps", "overlay_items", "frame_graph", "fps_lock_30",
+        "disable_fog", "reduce_effects"};
     /** Preset keys the player may still change while it is on. */
     private static final java.util.Set<String> LOW_END_FREE = new java.util.HashSet<>(java.util.Arrays.asList(
             "resolution_scale", "show_fps", "overlay_items", "frame_graph", "fps_lock_30"));
@@ -159,13 +160,13 @@ final class AppSettings {
         final java.util.Map<String, ?> all = prefs.getAll();
         final StringBuilder more = new StringBuilder(backup);
         if (more.length() > 0 && more.charAt(more.length() - 1) != '\n') more.append('\n');
-        for (String key : new String[] {"overlay_items", "frame_graph"}) {
+        for (String key : new String[] {"overlay_items", "frame_graph", "disable_fog", "reduce_effects"}) {
             final Object v = all.get(key);
             final String type = v instanceof Boolean ? "b" : v instanceof Integer ? "i" : "-";
             more.append(key).append('=').append(type).append(':').append(v == null ? "" : v).append('\n');
         }
         prefs.edit().putString("low_end_backup", more.toString())
-                .putBoolean("show_fps", true).putInt("overlay_items", OVERLAY_FPS).putBoolean("frame_graph", false)
+                .putBoolean("show_fps", true).putInt("overlay_items", OVERLAY_FPS).putBoolean("frame_graph", false).putBoolean("disable_fog", true).putBoolean("reduce_effects", true)
                 .commit();
     }
 

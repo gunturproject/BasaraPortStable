@@ -4,7 +4,7 @@ param([switch]$ShardsOnly)
 $ErrorActionPreference = 'Stop'
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $ws = $root
-$env:DOTNET_ROOT = Join-Path $root 'third_party\dotnet'
+if (-not $env:DOTNET_ROOT) { $env:DOTNET_ROOT = Join-Path $root 'third_party\dotnet' }
 $env:PATH = "$env:DOTNET_ROOT;$env:PATH"
 $env:WII_ALLOW_UNSUPPORTED = '1'  # 3 debugger traps at 0x8039C5A0.. are overridden natively
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'; $env:DOTNET_NOLOGO = '1'

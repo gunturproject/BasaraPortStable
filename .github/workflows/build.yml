@@ -1,0 +1,72 @@
+name: Build BasaraPortStable
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 330
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          ndk-version: 28.2.13676358
+
+      - name: Setup toolchain
+        shell: pwsh
+        run: ./tools/setup-android.ps1
+
+      - name: Build translator
+        shell: pwsh
+        run: dotnet build translator/Translator.sln -c Release
+
+      - name: Translate PowerPC to C++
+        shell: pwsh
+        run: ./tools/b-translate.ps1
+
+      - name: Configure native (main)
+        shell: pwsh
+        run: |
+          $ndk = "$env:ANDROID_SDK_ROOT/ndk/28.2.13676358"
+          ./tools/b-android.ps1 -Mode configure -Ndk $ndk
+
+      - name: Build native (main)
+        shell: pwsh
+        run: |
+          $ndk = "$env:ANDROID_SDK_ROOT/ndk/28.2.13676358"
+          ./tools/b-android.ps1 -Mode build -Ndk $ndk -Jobs 4
+
+      - name: Stage native (main)
+        shell: pwsh
+        run: |
+          $ndk = "$env:ANDROID_SDK_ROOT/ndk/28.2.13676358"
+          ./tools/b-android.ps1 -Mode stage -Ndk $ndk
+
+      - name: Build APK
+        shell: pwsh
+        run: |
+          cd app
+          ../third_party/gradle/bin/gradle.bat assembleRelease "-PbasaraVersionName=1.2.2-stable" "-PbasaraVersionCode=51" --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: BasaraPortStable-apk
+          path: app/build/outputs/apk/release/*.apk

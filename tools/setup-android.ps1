@@ -50,7 +50,7 @@ try {
 } catch { Write-Host "Prepare-Dependencies stopped: $($_.Exception.Message)" }
 
 # 4. NDK 29 through the installed SDK sdkmanager (licenses already accepted there)
-$sdk = Join-Path $env:LOCALAPPDATA 'Android\Sdk'
+$sdk = if ($env:ANDROID_SDK_ROOT) { $env:ANDROID_SDK_ROOT } else { Join-Path $env:LOCALAPPDATA 'Android\Sdk' }
 $ndk = Join-Path $sdk 'ndk\28.2.13676358'
 if (-not (Test-Path $ndk)) {
     $sm = Get-ChildItem (Join-Path $sdk 'cmdline-tools') -Recurse -Filter sdkmanager.bat | Select-Object -First 1

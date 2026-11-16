@@ -134,12 +134,15 @@ final class DeviceProfile {
     static java.util.Map<String, Object> lowEndValues(String gpu, int level) {
         final java.util.Map<String, Object> v = new java.util.LinkedHashMap<>();
         v.put("display_lines", 480);
-        v.put("resolution_scale", scaleFor(gpu) <= 0.5f ? 0.5f : 1f);
+        v.put("resolution_scale", scaleFor(gpu) <= 0.5f ? 0.5f : (scaleFor(gpu) <= 0.75f ? 0.75f : 1f));
         v.put("texture_filter", 0);
         v.put("fsr_on", false);
         v.put("frameskip", true);
         v.put("dynamic_resolution", true);
         v.put("hd_textures", 0);
+        // Low-end phones gain frame time from these two 1.2 options; on by default for the preset.
+        v.put("disable_fog", true);
+        v.put("reduce_effects", true);
         // The overlay on with only the FPS counter, so a slow phone's player sees what the preset gives;
         // not held, it can be turned off or changed by hand.
         v.put("show_fps", true);
@@ -202,7 +205,7 @@ final class DeviceProfile {
             }
             if (model >= 700 && cores >= 6) return 2f;              // G710 MC10, G715, G720 MC7, G925
             if (cores >= 3 || model >= 600) return 1f;              // G57 MC3, G68 MC4, G610/G615
-            return model == 57 && cores <= 1 ? 0.75f : 1f;          // G57 MP1 (itel) vs MC2 (G99)
+            return model == 57 && cores <= 2 ? 0.75f : 1f;          // G57 MP1/MC2 (Helio G99): 0.75x holds the Basara arts
         }
         if (g.contains("mali-t") || g.contains("powervr") || g.contains("ge8")) return 0.5f;
         return 1f;
