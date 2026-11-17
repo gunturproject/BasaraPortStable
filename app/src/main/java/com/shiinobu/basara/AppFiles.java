@@ -548,7 +548,8 @@ final class AppFiles {
                 + "texture_replacements = " + settings.customTextures() + "\n"
                 + "texture_dumps = " + (settings.customTextures() && settings.dumpTextures()) + "\n"
                 + "hd_textures = " + settings.hdTextures() + "\n"
-                + "hd_cache_mb = " + settings.hdCacheMb() + "\n"
+                + "hd_cache_mb = " + Math.min(settings.hdCacheMb(),
+                        DeviceProfile.ramMb(context) < 4608 ? 256 : DeviceProfile.ramMb(context) < 6144 ? 512 : 1024) + "\n"
                 + "texture_key_report = " + settings.textureKeyReport() + "\n"
                 + (hasTable(config, "audio") ? "" : "\n[audio]\n"
                 + "volume = 1.0\n"

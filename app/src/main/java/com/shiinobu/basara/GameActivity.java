@@ -274,9 +274,17 @@ public final class GameActivity extends SDLActivity
             if (!settings.audioStretch()) Os.setenv("BASARA_AUDIO_STRETCH", "0", false);
             if (!settings.audioLimiter()) Os.setenv("BASARA_AUDIO_LIMITER", "0", false);
             if (settings.recordingAudio()) Os.setenv("BASARA_AUDIO_RECORDABLE", "1", false);
-            // Low RAM (ARMSX2 caps its texture pools on weak phones): a smaller cache for replaced textures.
+            // Replacement texture cache and VMA block size scaled to the phone's RAM, so a 4 GB phone
+            // does not claim a 4 GB (or 256 MB-block) budget it cannot hold and a bigger one is not
+            // capped at the low-end values.
             final long ram = DeviceProfile.ramMb(this);
-            if (ram > 0 && ram < 4608) Os.setenv("AURORA_REPLACEMENT_CACHE_MB", settings.hdTextures() != 0 ? "192" : "512", false);
+            final int replCache = settings.hdTextures() != 0
+                    ? (ram < 4608 ? 192 : ram < 6144 ? 256 : 384)
+                    : (ram < 4608 ? 512 : ram < 6144 ? 768 : 1024);
+            Os.setenv("AURORA_REPLACEMENT_CACHE_MB", String.valueOf(replCache), false);
+            if (ram > 0 && ram < 6144) {
+                Os.setenv("AURORA_VK_BLOCK_MB", ram < 4096 ? "32" : "64", false);
+            }
             // Upload Memory: Auto leaves the choice to the start-up measurement (vk_webgpu.cpp).
             if (settings.uploadMemory() != 0) {
                 Os.setenv("AURORA_VK_CACHED_STAGING", settings.uploadMemory() == 2 ? "1" : "0", false);
