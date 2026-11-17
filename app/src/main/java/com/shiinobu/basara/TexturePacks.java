@@ -123,7 +123,11 @@ final class TexturePacks {
 
     static List<String> archives() { return archives; }
 
+    /** A scan in flight when this changes drops what it found: the folder was asked to be read again. */
+    private static volatile int scanGeneration;
+
     static void recount() {
+        ++scanGeneration;
         infos.clear();
         rootScanned = false;
     }
@@ -152,8 +156,10 @@ final class TexturePacks {
         final List<String> missing = new ArrayList<>();
         for (Pack p : packs) if (!infos.containsKey(p.name)) missing.add(p.name);
         if (missing.isEmpty() && rootScanned) return;
+        final int generation = scanGeneration;
         counting = true;
         new Thread(() -> {
+            final java.util.Set<String> dump;
             if (!rootScanned) {
                 final List<String> zips = new ArrayList<>();
                 final File[] children = root.listFiles();
@@ -165,24 +171,32 @@ final class TexturePacks {
                         }
                     }
                 }
-                final java.util.Set<String> dump = new java.util.HashSet<>();
+                dump = new java.util.HashSet<>();
                 collectKeys(new File(root, "Dump"), dump);
-                archives = zips;
-                dumpKeys = dump;
-                rootScanned = true;
+                if (generation == scanGeneration) {
+                    archives = zips;
+                    dumpKeys = dump;
+                    rootScanned = true;
+                }
+            } else {
+                dump = dumpKeys;
             }
+            final Map<String, Info> found = new java.util.HashMap<>();
             for (String name : missing) {
+                if (generation != scanGeneration) break;  // recounted: this scan's answers are stale
                 final Info i = new Info();
                 if (name.equals(LOOSE)) scan(root, false, i);
                 else scan(new File(root, name), true, i);
-                if (!dumpKeys.isEmpty()) {
+                if (!dump.isEmpty()) {
                     i.seen = 0;
-                    for (String k : i.keys) if (dumpKeys.contains(k)) ++i.seen;
+                    for (String k : i.keys) if (dump.contains(k)) ++i.seen;
                 }
-                infos.put(name, i);
+                found.put(name, i);
             }
             activity.runOnUiThread(() -> {
                 counting = false;
+                if (generation == scanGeneration) infos.putAll(found);
+                // After a recount the caller asks again, now with the fresh state (infos cleared).
                 if (!activity.isFinishing()) done.run();
             });
         }, "texture-pack-count").start();

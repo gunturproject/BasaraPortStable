@@ -429,7 +429,10 @@ final class SettingsMenu {
             }
             rows.addView(bulk, Ui.matchWidth(dp(4)));
         }
-        valueRow(Tr.t("Mods Folder"), folder, Tr.t("Rescan"), () -> TexturePacks.recount());
+        valueRow(Tr.t("Mods Folder"), folder, Tr.t("Rescan"), () -> {
+            TexturePacks.recount();  // forget what was counted and read the folder again
+            show(section);
+        });
     }
 
     /** A wrapped line of text between rows (cards do not show their descriptions in this menu). */

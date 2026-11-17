@@ -716,6 +716,7 @@ public final class GameActivity extends SDLActivity
             layoutEditor.save();  // Back while editing: keep what was arranged
             return;
         }
+        if (menuOpen) return;  // Back twice, or the gear before the window is up: one menu only
         touch.release();
         final boolean inSession = nativeReady && nativeSessionActive();
         // The game stands still while the menu is open (no backup save: it isn't leaving the screen).

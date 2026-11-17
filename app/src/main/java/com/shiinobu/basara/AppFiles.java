@@ -61,23 +61,26 @@ final class AppFiles {
         //noinspection ResultOfMethodCallIgnored
         new File(dir, "ISO").delete();
         if (!dir.isDirectory() || !dir.canWrite()) return null;
-        if (!readmeWritten) {
-            readmeWritten = true;
-            writeIfChanged(new File(dir, "README.txt"), HOME_README);
+        if (!readmeWritten && writeIfChanged(new File(dir, "README.txt"), HOME_README)) {
+            readmeWritten = true;  // a failed write (storage full, a lock) is retried next time
         }
         return dir;
     }
 
     private static volatile boolean readmeWritten;
 
-    /** Writes `text` (CRLF, so Windows Notepad shows the lines) unless the file already holds as much. */
-    private static void writeIfChanged(File file, String text) {
+    /**
+     * Writes `text` (CRLF, so Windows Notepad shows the lines) unless the file already holds as much.
+     * True when the file is as it should be afterwards.
+     */
+    private static boolean writeIfChanged(File file, String text) {
         final byte[] bytes = text.replace("\n", "\r\n").getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        if (file.length() == bytes.length) return;
+        if (file.length() == bytes.length) return true;
         try (java.io.FileOutputStream out = new java.io.FileOutputStream(file)) {
             out.write(bytes);
+            return true;
         } catch (java.io.IOException ignored) {
-            // Only a help file.
+            return false;  // Only a help file.
         }
     }
 

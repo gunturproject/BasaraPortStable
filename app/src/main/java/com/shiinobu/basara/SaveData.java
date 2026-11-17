@@ -145,6 +145,8 @@ final class SaveData {
         final File backup = latestBackup(activity);
         if (backup == null) return;
         // Copied out first: the import's own backup must not count as the newest one being read.
+        // The backup itself stays: a failed import must leave the way back in place (it is only
+        // dropped later by the usual keep-the-last-few trimming).
         final File copy = new File(activity.getCacheDir(), "undo-import.zip");
         try (InputStream in = new FileInputStream(backup); OutputStream out = new FileOutputStream(copy)) {
             copy(in, out);
@@ -152,8 +154,6 @@ final class SaveData {
             Log.e(TAG, "undo import failed", e);
             return;
         }
-        //noinspection ResultOfMethodCallIgnored
-        backup.delete();
         run(activity, false, Uri.fromFile(copy), null, endGame, done);
     }
 
@@ -216,8 +216,13 @@ final class SaveData {
     /**
      * Copies the save out when it changed since the last copy (two file checks when it did not), so an
      * uninstall or "Clear data" does not take it. Called when the game starts and when it leaves the screen.
+     *
+     * <p>Synchronized, and each writer uses a temp file of its own: leaving the screen starts this on a
+     * worker while the next start calls it on the main thread, and two writers sharing one temp file
+     * could leave a half-written latest.zip that autoRestore would import over the real save.
      */
-    static void autoBackup(Context context) {
+    static synchronized void autoBackup(Context context) {
+        File tmp = null;
         try {
             final File copy = autoCopy();
             if (copy == null) return;
@@ -227,7 +232,7 @@ final class SaveData {
             if (copy.isFile() && copy.lastModified() >= save.lastModified()) return;
             final File parent = copy.getParentFile();
             if (parent == null || (!parent.isDirectory() && !parent.mkdirs())) return;
-            final File tmp = new File(parent, AUTO_COPY + ".tmp");
+            tmp = new File(parent, AUTO_COPY + "." + System.nanoTime() + ".tmp");
             try (OutputStream out = new FileOutputStream(tmp)) {
                 zipSave(dir, out);
             }
@@ -236,8 +241,14 @@ final class SaveData {
                 copy.delete();
                 if (!tmp.renameTo(copy)) throw new IOException("cannot replace " + copy);
             }
+            tmp = null;  // renamed away
         } catch (Exception e) {
             Log.w(TAG, "automatic save copy failed", e);
+        } finally {
+            if (tmp != null) {
+                //noinspection ResultOfMethodCallIgnored
+                tmp.delete();
+            }
         }
     }
 

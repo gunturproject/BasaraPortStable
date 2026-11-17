@@ -151,23 +151,40 @@ final class AppSettings {
     }
 
     /**
-     * A Low-End preset applied by an older build (its backup has no overlay_items) gets the overlay keys the
-     * preset now sets, once; their old values join the backup so Undo still puts them back.
+     * A Low-End preset applied by an older build gets the keys the preset sets now, one at a time: each
+     * missing key's old value joins the backup, so Undo still puts it back. A backup is only ever added
+     * to, so a build that later adds another key still upgrades it.
      */
     void upgradeLowEnd() {
         final String backup = prefs.getString("low_end_backup", null);
-        if (backup == null || backup.contains("overlay_items=")) return;
+        if (backup == null) return;
+        final java.util.Set<String> recorded = new java.util.HashSet<>();
+        for (String line : backup.split("\n")) {
+            final int eq = line.indexOf('=');
+            if (eq > 0) recorded.add(line.substring(0, eq));
+        }
         final java.util.Map<String, ?> all = prefs.getAll();
         final StringBuilder more = new StringBuilder(backup);
         if (more.length() > 0 && more.charAt(more.length() - 1) != '\n') more.append('\n');
+        final SharedPreferences.Editor e = prefs.edit();
+        boolean changed = false;
         for (String key : new String[] {"overlay_items", "frame_graph", "disable_fog", "reduce_effects"}) {
+            if (recorded.contains(key)) continue;
             final Object v = all.get(key);
-            final String type = v instanceof Boolean ? "b" : v instanceof Integer ? "i" : "-";
+            final String type = v instanceof Boolean ? "b" : v instanceof Integer ? "i" : v instanceof Float ? "f" : "-";
             more.append(key).append('=').append(type).append(':').append(v == null ? "" : v).append('\n');
+            switch (key) {
+                case "overlay_items":
+                    e.putBoolean("show_fps", true).putInt(key, OVERLAY_FPS);
+                    break;
+                default:
+                    e.putBoolean(key, key.equals("disable_fog") || key.equals("reduce_effects"));
+                    break;
+            }
+            changed = true;
         }
-        prefs.edit().putString("low_end_backup", more.toString())
-                .putBoolean("show_fps", true).putInt("overlay_items", OVERLAY_FPS).putBoolean("frame_graph", false).putBoolean("disable_fog", true).putBoolean("reduce_effects", true)
-                .commit();
+        if (!changed) return;
+        e.putString("low_end_backup", more.toString()).commit();
     }
 
     /** Puts back the settings from before the Low-End preset. */

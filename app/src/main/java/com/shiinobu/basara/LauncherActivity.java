@@ -628,14 +628,19 @@ public final class LauncherActivity extends Activity {
 
     /** An update this version must take: the game waits for it, and its sheet can't be put away. */
     private Updater.Release requiredUpdate;
+    /** True while its sheet is up: a second check must not stack another one over it. */
+    private boolean requiredUpdateShowing;
 
     private void requireUpdate(Updater.Release release) {
         requiredUpdate = release;
+        if (requiredUpdateShowing) return;
+        requiredUpdateShowing = true;
         new Sheet(this, Tr.t("Update required"),
                 Tr.t("This version can't be played any more. Install Basara ") + release.version
                         + Tr.t(" to keep playing; your saves and settings stay."))
                 .action(Tr.t("Update"), null, true, false, () -> startUpdate(release))
                 .cancelable(false)
+                .onDismiss(() -> requiredUpdateShowing = false)
                 .show();
     }
 
