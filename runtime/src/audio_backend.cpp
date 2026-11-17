@@ -362,7 +362,7 @@ void AudioBackend::Shutdown() {
 uint32_t AudioBackend::QueueLimitBytesLocked() const {
     // A cap, not a target: the queue normally sits near 70 ms. A slow phone (Helio G99 in a
     // crowded battle) hands over audio in bursts, and a 120 ms cap dropped dozens of blocks a second.
-    constexpr uint32_t queueMs = 200;
+    constexpr uint32_t queueMs = 250;
 
     const uint64_t bytesPerSecond = static_cast<uint64_t>(m_spec.freq) *
                                     static_cast<uint64_t>(m_spec.channels) *

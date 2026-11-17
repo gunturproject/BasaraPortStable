@@ -1451,7 +1451,7 @@ private:
             const char* env = std::getenv("BASARA_AUDIO_LIMITER");
             return env == nullptr || env[0] != '0';
         }();
-        constexpr double kCeiling = 30000.0;
+        constexpr double kCeiling = 31000.0;
         double peak = 0.0;
         if (enabled) {
             for (uint32_t i = 0; i < kAxSamplesPerFrame; ++i) {
