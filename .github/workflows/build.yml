@@ -65,8 +65,8 @@ jobs:
         working-directory: app
         run: >
           gradle assembleRelease
-          "-PbasaraVersionName=1.2.2-stable"
-          "-PbasaraVersionCode=51"
+          "-PbasaraVersionName=1.2.3-stable"
+          "-PbasaraVersionCode=52"
           --no-daemon --stacktrace
 
       - name: Upload APK

@@ -35,6 +35,16 @@ final class ReleaseNotes {
     }
 
     private static final Entry[] ALL = {
+        new Entry("1.2.3", "Mali stability and a Helio G99 graphics option", "2026-11-17",
+                new String[] {
+                    "Performance > Fast Graphics Cores (Experimental): lets the render thread use the game's fast CPU cores, not only the little ones. On a Helio G99 one of the two fast cores sits idle while the other draws, so busy battles can run faster. The phone runs warmer with it on, and it is off by default.",
+                    "If the GPU stops responding when Render Resolution is already at its lowest, Display Resolution now drops one step for the next start instead of only telling you.",
+                },
+                new String[] {
+                },
+                new String[] {
+                    "Busy battles on a Helio G99 still sit near 30 fps: the game's CPU work is the limit there.",
+                }),
         new Entry("1.2.1", "Hotfix: smoother menus, cutscenes and ultimates", "2026-11-09",
                 new String[] {
                     "Choose how the game file is used: Extract (as before, about 4 GB) or Read, which plays the ISO or RVZ where it is, without extracting, for phones with little free space.",

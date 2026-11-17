@@ -755,6 +755,15 @@ final class SettingsMenu {
                     confirmRestart(Tr.t("GX Thread"), on ? "on" : "off", on ? "off" : "on",
                             () -> settings.setGxThread(!on));
                 }, false);
+        restart(null);
+        toggleRow(Tr.t("Fast Graphics Cores"), Tr.t("Also lets the render thread use the game's fastest CPU cores, "
+                        + "not only the little ones: a phone with two fast cores leaves one of them idle while the "
+                        + "other draws, so busy battles can run faster. The phone runs warmer with it on."),
+                settings.fastGfxCores(), true, on -> {
+                    settings.setFastGfxCores(on);
+                    confirmRestart(Tr.t("Fast Graphics Cores"), on ? "on" : "off", on ? "off" : "on",
+                            () -> settings.setFastGfxCores(!on));
+                }, false);
         final boolean thermal = AppSettings.thermalSupported(activity);
         toggleRow(Tr.t("Thermal Control"), thermal
                         ? Tr.t("When the phone warms up, draws at 30 fps (the game itself keeps full speed) "

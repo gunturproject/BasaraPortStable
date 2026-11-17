@@ -376,6 +376,16 @@ final class AppSettings {
     boolean realWidescreen() { return prefs.getBoolean("real_widescreen", false); }
     void setRealWidescreen(boolean on) { prefs.edit().putBoolean("real_widescreen", on).commit(); }
     void setGxThread(boolean on) { prefs.edit().putBoolean("gx_thread", on).commit(); }
+    /**
+     * Fast Graphics Cores (experimental, off by default; BASARA_CPU_HELPERS=fast in cpu_boost.cpp):
+     * the render worker joins the game thread's fastest cores instead of staying on the little ones.
+     * On a two-fast-core phone (Helio G99 / Mali-G57 MC2) the game thread cannot use both A76s by
+     * itself, so one of them is idle while the worker decodes the frame on an A55; here the worker
+     * gets that core. It also keeps both fast cores warm, so the CPU draws more power: worth trying
+     * on a phone that sits at 30 fps in battles with its GPU half idle, and easy to turn back.
+     */
+    boolean fastGfxCores() { return prefs.getBoolean("fast_gfx_cores", false); }
+    void setFastGfxCores(boolean on) { prefs.edit().putBoolean("fast_gfx_cores", on).commit(); }
     /** Thermal Control (off by default). */
     boolean thermalControl() { return prefs.getBoolean("thermal_control", false); }
     void setThermalControl(boolean on) { prefs.edit().putBoolean("thermal_control", on).commit(); }

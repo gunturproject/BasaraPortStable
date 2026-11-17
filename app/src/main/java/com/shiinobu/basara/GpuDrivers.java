@@ -89,6 +89,18 @@ final class GpuDrivers {
             if (s >= 0.5f && s < scale - 0.01f) lower = s;  // the largest step below, never Auto (0)
         }
         if (lower >= scale - 0.01f) {
+            // Render Resolution has no step left below it: the picture the game sends to the screen is
+            // the other lever (a smaller swapchain, presentation and every full-screen pass get cheaper).
+            final int lines = settings.displayLines();
+            int next = 0;
+            for (int step : AppSettings.DISPLAY_LINES) {
+                if (step > 0 && step < lines) next = step;  // the largest step below the current one
+            }
+            if (next > 0) {
+                settings.setDisplayLines(next);
+                return Tr.t("The GPU stopped responding and the game closed. Display Resolution lowered to ")
+                        + next + "p.";
+            }
             return Tr.t("The GPU stopped responding and the game closed. A lower Render Resolution or Renderer may help.");
         }
         settings.setResolutionScale(lower);
