@@ -784,6 +784,14 @@ final class SettingsMenu {
                         + "delay. Try it if you hear crackling (recak-recak)."),
                 settings.recordingAudio(), on -> settings.setRecordingAudio(on));
         restart(null);
+        toggleRow(Tr.t("Time Stretching"), Tr.t("Keeps the game's sound in step with its frame rate, so a slow "
+                        + "phone does not stutter. Off is a little faster but can make the sound choppy."),
+                settings.audioStretch(), on -> settings.setAudioStretch(on));
+        restart(null);
+        toggleRow(Tr.t("Soft Limiter"), Tr.t("Tames the loud peaks of busy battles so they do not clip and "
+                        + "crackle, while keeping the punch. Off is louder but can crackle."),
+                settings.audioLimiter(), on -> settings.setAudioLimiter(on));
+        restart(null);
         choiceRow(Tr.t("Upload Memory"), Tr.t("Vulkan renderer: the memory the game writes its graphics data into. "
                         + "Auto measures at start which one is faster on this phone. Standard suits most phones, "
                         + "Cached helps some slow ones."),

@@ -233,6 +233,8 @@ public final class GameActivity extends SDLActivity
             // Fast Graphics Cores: the render worker joins the game thread's fastest cores instead of
             // the little ones (runtime/src/cpu_boost.cpp, PinHelpers).
             if (settings.fastGfxCores()) Os.setenv("BASARA_CPU_HELPERS", "fast", false);
+            if (!settings.audioStretch()) Os.setenv("BASARA_AUDIO_STRETCH", "0", false);
+            if (!settings.audioLimiter()) Os.setenv("BASARA_AUDIO_LIMITER", "0", false);
             if (settings.recordingAudio()) Os.setenv("BASARA_AUDIO_RECORDABLE", "1", false);
             // Low RAM (ARMSX2 caps its texture pools on weak phones): a smaller cache for replaced textures.
             final long ram = DeviceProfile.ramMb(this);

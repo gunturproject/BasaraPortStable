@@ -386,6 +386,18 @@ final class AppSettings {
      */
     boolean fastGfxCores() { return prefs.getBoolean("fast_gfx_cores", false); }
     void setFastGfxCores(boolean on) { prefs.edit().putBoolean("fast_gfx_cores", on).commit(); }
+    /**
+     * Time Stretching (default on): keeps the game's audio in step with its frame rate so a slow phone
+     * does not stutter. Turning it off lowers the delay a little but can make the sound choppy.
+     */
+    boolean audioStretch() { return prefs.getBoolean("audio_stretch", true); }
+    void setAudioStretch(boolean on) { prefs.edit().putBoolean("audio_stretch", on).commit(); }
+    /**
+     * Soft Limiter (default on): tames the loud peaks of busy battles so they do not clip and crackle,
+     * while keeping the punch. Turning it off is louder but can crackle.
+     */
+    boolean audioLimiter() { return prefs.getBoolean("audio_limiter", true); }
+    void setAudioLimiter(boolean on) { prefs.edit().putBoolean("audio_limiter", on).commit(); }
     /** Thermal Control (off by default). */
     boolean thermalControl() { return prefs.getBoolean("thermal_control", false); }
     void setThermalControl(boolean on) { prefs.edit().putBoolean("thermal_control", on).commit(); }
