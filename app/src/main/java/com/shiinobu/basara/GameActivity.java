@@ -143,12 +143,14 @@ public final class GameActivity extends SDLActivity
             for (android.view.Display.Mode m : display.getSupportedModes()) {
                 if (best == null) { best = m; continue; }
                 final float r = m.getRefreshRate(), br = best.getRefreshRate();
-                final boolean m60 = Math.abs(r - 60f) < 0.5f, b60 = Math.abs(br - 60f) < 0.5f;
-                if (m60 && !b60) { best = m; continue; }
-                if (m60 != b60) continue;
+                // Prefer a stable 120 Hz mode (no oscillation with the native 60 Hz hint disabled),
+                // then 60 Hz, then whatever is closest to 60.
                 final boolean m120 = Math.abs(r - 120f) < 0.5f, b120 = Math.abs(br - 120f) < 0.5f;
                 if (m120 && !b120) { best = m; continue; }
                 if (m120 != b120) continue;
+                final boolean m60 = Math.abs(r - 60f) < 0.5f, b60 = Math.abs(br - 60f) < 0.5f;
+                if (m60 && !b60) { best = m; continue; }
+                if (m60 != b60) continue;
                 if (Math.abs(r - 60f) < Math.abs(br - 60f)) best = m;
             }
             if (best == null) return;
@@ -287,6 +289,19 @@ public final class GameActivity extends SDLActivity
                 // For the log's device line: the screen's refresh rate.
                 Os.setenv("BASARA_DISPLAY_HZ", String.valueOf(Math.round((android.os.Build.VERSION.SDK_INT >= 30 ? getDisplay()
                         : getWindowManager().getDefaultDisplay()).getRefreshRate())), true);
+            } catch (Exception ignored) {
+            }
+            // On a 120 Hz panel the native 60 Hz surface hint makes the panel flip between 60 and 120
+            // mid-session (see the tester log: "V-Sync: display 60/120 Hz" alternating), which is the
+            // stutter. Disable that hint there and let the window stay at 120 Hz (preferredDisplayModeId
+            // below), so the game locks to 2 refreshes per frame and never switches.
+            try {
+                final android.view.Display d = android.os.Build.VERSION.SDK_INT >= 30 ? getDisplay()
+                        : getWindowManager().getDefaultDisplay();
+                boolean has120 = false;
+                if (d != null) for (android.view.Display.Mode m : d.getSupportedModes())
+                    if (Math.abs(m.getRefreshRate() - 120f) < 0.5f) { has120 = true; break; }
+                if (has120) Os.setenv("BASARA_SURFACE_FPS", "0", true);
             } catch (Exception ignored) {
             }
         } catch (Exception e) {
