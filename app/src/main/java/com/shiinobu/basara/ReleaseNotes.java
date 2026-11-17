@@ -41,7 +41,7 @@ final class ReleaseNotes {
                     "Performance > Smooth Audio: a larger audio buffer and no low-latency path, so the sound stays steady instead of crackling or stuttering on a slow phone. Try it if you hear crackling (recak-recak).",
                     "Performance > Time Stretching and Soft Limiter: keep the sound in step with the frame rate and tame loud peaks so busy battles stay clean; turn either off for lower delay or more volume.",
                     "On a 120 Hz panel the window now stays at 120 Hz (no 60/120 switching) and the game locks to 2 refreshes per frame, removing the mid-game stutter. On a 90 Hz panel it asks for 60 Hz.",
-                    "Low-End phones now default to the steadier audio path and, on two-fast-core phones (Helio G99), to Fast Graphics Cores.",
+                    "Display > Frame Interpolation (Experimental): renders extra frames between the game's own 60 so a 120/180 Hz panel shows smoother motion. Heavy on the GPU.",
                     "Memory use is scaled to the phone's RAM: smaller texture caches and VMA blocks on 4-6 GB phones, larger ones on 8 GB+, instead of one fixed 4 GB budget.",
                     "If the GPU stops responding when Render Resolution is already at its lowest, Display Resolution now drops one step for the next start instead of only telling you.",
                 },

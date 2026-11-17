@@ -531,7 +531,7 @@ final class AppFiles {
                 + "fsr = " + settings.fsr() + "\n"
                 + "texture_filter = " + settings.textureFilter() + "\n"
                 + "resolution_multiplier = " + String.format(Locale.ROOT, "%.2f", settings.resolutionScale()) + "\n"
-                + "frame_interpolation_fps = 0\n"
+                + "frame_interpolation_fps = " + settings.frameInterpolationFps() + "\n"
                 + "graphics_api = \"auto\"\n"
                 + "skip_unready_pipelines = true\n"
                 + "disable_copy_filter = true\n"

@@ -399,6 +399,16 @@ final class AppSettings {
      */
     boolean audioLimiter() { return prefs.getBoolean("audio_limiter", true); }
     void setAudioLimiter(boolean on) { prefs.edit().putBoolean("audio_limiter", on).commit(); }
+
+    /** Frame Interpolation (experimental, off by default): renders extra frames between the game's own
+     *  60 so a 120/180 Hz panel shows smoother motion. Heavy on the GPU; lower Render Resolution first. */
+    int frameInterpolationFps() {
+        final int v = prefs.getInt("frame_interpolation_fps", 0);
+        return v == 120 || v == 180 ? v : 0;
+    }
+    void setFrameInterpolationFps(int fps) {
+        prefs.edit().putInt("frame_interpolation_fps", fps == 120 || fps == 180 ? fps : 0).commit();
+    }
     /** Thermal Control (off by default). */
     boolean thermalControl() { return prefs.getBoolean("thermal_control", false); }
     void setThermalControl(boolean on) { prefs.edit().putBoolean("thermal_control", on).commit(); }

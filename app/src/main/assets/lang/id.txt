@@ -923,3 +923,5 @@ Time Stretching	Peregangan Waktu
 Keeps the game's sound in step with its frame rate, so a slow phone does not stutter. Off is a little faster but can make the sound choppy.	Menjaga suara game seirama dengan frame rate, jadi HP lambat tidak tersendat. Mati sedikit lebih cepat tetapi suara bisa patah-patah.
 Soft Limiter	Pembatas Lembut
 Tames the loud peaks of busy battles so they do not clip and crackle, while keeping the punch. Off is louder but can crackle.	Menjinakkan puncak keras pertempuran ramai agar tidak clip dan kresek, sambil tetap punchy. Mati lebih keras tetapi bisa kresek.
+Frame Interpolation (Experimental)	Interpolasi Frame (Eksperimen)
+Renders extra frames between the game's own 60 so a 120/180 Hz panel shows smoother motion. Heavy on the GPU: lower Render Resolution first. Off keeps the game at its native 60.	Merender frame tambahan di antara 60 frame asli game agar panel 120/180 Hz menampilkan gerakan lebih halus. Berat di GPU: turunkan Resolusi Render dulu. Mati menjaga game di 60 asli.

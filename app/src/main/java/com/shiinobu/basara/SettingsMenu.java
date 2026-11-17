@@ -143,6 +143,13 @@ final class SettingsMenu {
                 }, false);
         resolutionRow();
         displayResolutionRow();
+        restart(null);
+        choiceRow(Tr.t("Frame Interpolation (Experimental)"), Tr.t("Renders extra frames between the game's own 60 so a "
+                        + "120/180 Hz panel shows smoother motion. Heavy on the GPU: lower Render Resolution first. "
+                        + "Off keeps the game at its native 60."),
+                new String[] {Tr.t("Off"), "120", "180"}, settings.frameInterpolationFps() == 0 ? 0
+                        : settings.frameInterpolationFps() == 120 ? 1 : 2, true,
+                which -> settings.setFrameInterpolationFps(which == 0 ? 0 : which == 1 ? 120 : 180));
         choiceRow(Tr.t("Camera Distance"), Tr.t("How far the camera stays from your character in battle. Farther shows "
                         + "more of the field. Off in LAN play."),
                 new String[] {Tr.t("Default"), "1.5x", "2x"}, settings.cameraDistance(), true,
