@@ -62,6 +62,9 @@ final class DeviceProfile {
             settings.resetThermalOnce();
         }
         settings.markLowEndProfile();
+        if (lowEnd(context, gpu, ramMb) && fastCoreCount() == 2) {
+            settings.setFastGfxCores(true);
+        }
         if (!lowEnd(context, gpu, ramMb)) return false;
         // Only what the player never changed: a key never written, or still holding the first
         // profile's own pick (which wrote resolution_scale and frameskip without the player).
@@ -143,6 +146,8 @@ final class DeviceProfile {
         // Low-end phones gain frame time from these two 1.2 options; on by default for the preset.
         v.put("disable_fog", true);
         v.put("reduce_effects", true);
+        // Low-end phones stutter more often, so prefer the steadier (larger-buffer) audio path.
+        v.put("recording_audio", true);
         // The overlay on with only the FPS counter, so a slow phone's player sees what the preset gives;
         // not held, it can be turned off or changed by hand.
         v.put("show_fps", true);
@@ -258,6 +263,24 @@ final class DeviceProfile {
             }
         }
         return best;
+    }
+
+    /** How many cores share the fastest cluster's top clock (a phone with two is a Helio G99 class). */
+    static int fastCoreCount() {
+        int best = maxCpuMhz();
+        if (best <= 0) return 0;
+        int count = 0;
+        for (int i = 0; i < 16; ++i) {
+            final File f = new File("/sys/devices/system/cpu/cpu" + i + "/cpufreq/cpuinfo_max_freq");
+            if (!f.isFile()) continue;
+            try {
+                final String text = new String(Files.readAllBytes(f.toPath()), StandardCharsets.US_ASCII).trim();
+                final int mhz = Integer.parseInt(text) / 1000;
+                if (mhz >= best * 0.95) count++;
+            } catch (Exception ignored) {
+            }
+        }
+        return count;
     }
 
     static long ramMb(Context context) {

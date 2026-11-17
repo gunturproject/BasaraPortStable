@@ -128,6 +128,42 @@ public final class GameActivity extends SDLActivity
     }
 
     /**
+     * On a 90 or 120 Hz panel the game's 60 fps clock does not divide evenly into the refresh, so
+     * frames land on uneven vblanks and the picture (and the audio that follows it) stutters. Asking
+     * the window for a 60 Hz mode (or 120 when 60 is not offered) lines the panel up with the game.
+     * A hint, not a demand: phones without such a mode keep their own rate.
+     */
+    private void applyDisplayModeHint() {
+        if (Build.VERSION.SDK_INT < 23) return;
+        try {
+            final android.view.Display display = (Build.VERSION.SDK_INT >= 30 ? getDisplay()
+                    : getWindowManager().getDefaultDisplay());
+            if (display == null) return;
+            android.view.Display.Mode best = null;
+            for (android.view.Display.Mode m : display.getSupportedModes()) {
+                if (best == null) { best = m; continue; }
+                final float r = m.getRefreshRate(), br = best.getRefreshRate();
+                final boolean m60 = Math.abs(r - 60f) < 0.5f, b60 = Math.abs(br - 60f) < 0.5f;
+                if (m60 && !b60) { best = m; continue; }
+                if (m60 != b60) continue;
+                final boolean m120 = Math.abs(r - 120f) < 0.5f, b120 = Math.abs(br - 120f) < 0.5f;
+                if (m120 && !b120) { best = m; continue; }
+                if (m120 != b120) continue;
+                if (Math.abs(r - 60f) < Math.abs(br - 60f)) best = m;
+            }
+            if (best == null) return;
+            final android.view.WindowManager.LayoutParams lp = getWindow().getAttributes();
+            if (lp.preferredDisplayModeId == best.getModeId()) return;
+            lp.preferredDisplayModeId = best.getModeId();
+            getWindow().setAttributes(lp);
+            Log.i(TAG, "display mode: " + best.getPhysicalWidth() + "x" + best.getPhysicalHeight()
+                    + " @ " + best.getRefreshRate() + " Hz");
+        } catch (Exception e) {
+            Log.w(TAG, "display mode hint failed", e);
+        }
+    }
+
+    /**
      * Always landscape, either way up by the sensor, whether or not auto-rotate is on. SDL would ask
      * for USER_LANDSCAPE, which stays on one side while the player has rotation locked.
      */
@@ -394,6 +430,7 @@ public final class GameActivity extends SDLActivity
         if (motion != null) {
             motion.start(settings.motionTilt(), settings.motionShake());
         }
+        applyDisplayModeHint();
     }
 
     @Override
@@ -697,6 +734,7 @@ public final class GameActivity extends SDLActivity
         settings = new AppSettings(this);
         applyNativeSettings();
         applyDisplayResolution();
+        applyDisplayModeHint();
         getWindow().setSustainedPerformanceMode(sustainedMode());
         applyControlSettings();
         if (motion != null) {

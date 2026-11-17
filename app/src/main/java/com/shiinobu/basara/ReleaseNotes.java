@@ -40,6 +40,8 @@ final class ReleaseNotes {
                     "Performance > Fast Graphics Cores (Experimental): lets the render thread use the game's fast CPU cores, not only the little ones. On a Helio G99 one of the two fast cores sits idle while the other draws, so busy battles can run faster. The phone runs warmer with it on, and it is off by default.",
                     "Performance > Smooth Audio: a larger audio buffer and no low-latency path, so the sound stays steady instead of crackling or stuttering on a slow phone. Try it if you hear crackling (recak-recak).",
                     "Performance > Time Stretching and Soft Limiter: keep the sound in step with the frame rate and tame loud peaks so busy battles stay clean; turn either off for lower delay or more volume.",
+                    "On a 90 or 120 Hz panel the window now asks for a 60 Hz mode, so the game's frames land on even vblanks instead of stuttering.",
+                    "Low-End phones now default to the steadier audio path and, on two-fast-core phones (Helio G99), to Fast Graphics Cores.",
                     "If the GPU stops responding when Render Resolution is already at its lowest, Display Resolution now drops one step for the next start instead of only telling you.",
                 },
                 new String[] {

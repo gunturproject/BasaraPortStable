@@ -107,7 +107,7 @@ final class AppSettings {
     /** Every setting the Low-End preset may change; what they were before is kept for Undo. */
     static final String[] LOW_END_KEYS = {"display_lines", "resolution_scale", "texture_filter", "fsr_on",
         "frameskip", "dynamic_resolution", "hd_textures", "show_fps", "overlay_items", "frame_graph", "fps_lock_30",
-        "disable_fog", "reduce_effects"};
+        "disable_fog", "reduce_effects", "recording_audio"};
     /** Preset keys the player may still change while it is on. */
     private static final java.util.Set<String> LOW_END_FREE = new java.util.HashSet<>(java.util.Arrays.asList(
             "resolution_scale", "show_fps", "overlay_items", "frame_graph", "fps_lock_30"));
@@ -168,7 +168,7 @@ final class AppSettings {
         if (more.length() > 0 && more.charAt(more.length() - 1) != '\n') more.append('\n');
         final SharedPreferences.Editor e = prefs.edit();
         boolean changed = false;
-        for (String key : new String[] {"overlay_items", "frame_graph", "disable_fog", "reduce_effects"}) {
+        for (String key : new String[] {"overlay_items", "frame_graph", "disable_fog", "reduce_effects", "recording_audio"}) {
             if (recorded.contains(key)) continue;
             final Object v = all.get(key);
             final String type = v instanceof Boolean ? "b" : v instanceof Integer ? "i" : v instanceof Float ? "f" : "-";
@@ -178,7 +178,8 @@ final class AppSettings {
                     e.putBoolean("show_fps", true).putInt(key, OVERLAY_FPS);
                     break;
                 default:
-                    e.putBoolean(key, key.equals("disable_fog") || key.equals("reduce_effects"));
+                    e.putBoolean(key, key.equals("disable_fog") || key.equals("reduce_effects")
+                            || key.equals("recording_audio"));
                     break;
             }
             changed = true;
