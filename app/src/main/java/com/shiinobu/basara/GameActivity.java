@@ -282,8 +282,10 @@ public final class GameActivity extends SDLActivity
                     ? (ram < 4608 ? 192 : ram < 6144 ? 256 : 384)
                     : (ram < 4608 ? 512 : ram < 6144 ? 768 : 1024);
             Os.setenv("AURORA_REPLACEMENT_CACHE_MB", String.valueOf(replCache), false);
-            if (ram > 0 && ram < 6144) {
-                Os.setenv("AURORA_VK_BLOCK_MB", ram < 4096 ? "32" : "64", false);
+            // Fewer pipeline-compile workers on phones with a small fast cluster, so stage loads do not
+            // steal both big cores from the game thread (AURORA_PIPELINE_PLAY_WORKERS).
+            if (DeviceProfile.fastCoreCount() <= 4) {
+                Os.setenv("AURORA_PIPELINE_PLAY_WORKERS", "1", false);
             }
             // Upload Memory: Auto leaves the choice to the start-up measurement (vk_webgpu.cpp).
             if (settings.uploadMemory() != 0) {
