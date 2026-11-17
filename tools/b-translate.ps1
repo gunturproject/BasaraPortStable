@@ -10,6 +10,7 @@ $env:WII_ALLOW_UNSUPPORTED = '1'  # 3 debugger traps at 0x8039C5A0.. are overrid
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'; $env:DOTNET_NOLOGO = '1'
 $tr = Join-Path $root 'translator\src\Translator.Cli\bin\Release\net8.0\Translator.Cli.dll'
 $logs = Join-Path $root 'generated\b'
+New-Item -ItemType Directory -Force $logs | Out-Null
 $project = 'config/basara/recomp.yml'
 function Step([string]$Name, [string[]]$A) {
     $t = Get-Date

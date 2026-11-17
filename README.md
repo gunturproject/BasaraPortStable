@@ -135,6 +135,11 @@ Optional: `tools\b-pgo.ps1` for a profile-guided (PGO + ThinLTO) Android build.
 | `config/basara/` | Game configuration: `recomp.yml`, `MAP.txt` |
 | `tools/` | Build, run and analysis scripts |
 
+### Building in GitHub Actions
+
+- **Build BasaraPortStable (app)** runs on every push to `main` and builds the APK from `app/`, reusing the published native core (`libmain.so`, `libbasara_disc.so` and the runtime assets) from the base APK. It needs no game files; the APK is in the run's artifacts.
+- **Build BasaraPortStable (native)** is manual (**Run workflow**) and recompiles the game, for changes outside `app/`. It needs your own `main.dol`: set the repository variable `BASARA_ASSETS_URL` to a direct download (a `.zip` containing `main.dol` works too), optionally `BASARA_ASSETS_TOKEN` for a private host, or pass `assets_url` when starting the run. The SHA-256 is checked against `config/basara/recomp.yml`.
+
 How the pieces fit together: [docs/architecture.md](docs/architecture.md).
 
 ## Credits

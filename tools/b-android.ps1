@@ -18,6 +18,7 @@ $ws = $root
 $tp = Join-Path $root 'third_party'
 $bd = Join-Path $root $BuildDir
 $logs = Join-Path $root 'generated\b'
+New-Item -ItemType Directory -Force $logs | Out-Null
 $cmake = Join-Path $tp 'cmake\bin\cmake.exe'
 $ninja = Join-Path $tp 'ninja\ninja.exe'
 $deps = Join-Path $tp 'deps'

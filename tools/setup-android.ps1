@@ -49,11 +49,21 @@ try {
     & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'tools\build\Prepare-Dependencies.ps1') -Destination $deps
 } catch { Write-Host "Prepare-Dependencies stopped: $($_.Exception.Message)" }
 
-# 4. NDK 29 through the installed SDK sdkmanager (licenses already accepted there)
-$sdk = if ($env:ANDROID_SDK_ROOT) { $env:ANDROID_SDK_ROOT } else { Join-Path $env:LOCALAPPDATA 'Android\Sdk' }
+# 4. NDK 28.2 through the installed SDK's sdkmanager (licenses already accepted there)
+$sdk = if ($env:ANDROID_SDK_ROOT) { $env:ANDROID_SDK_ROOT } elseif ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { Join-Path $env:LOCALAPPDATA 'Android\Sdk' }
 $ndk = Join-Path $sdk 'ndk\28.2.13676358'
 if (-not (Test-Path $ndk)) {
-    $sm = Get-ChildItem (Join-Path $sdk 'cmdline-tools') -Recurse -Filter sdkmanager.bat | Select-Object -First 1
-    & $sm.FullName --sdk_root=$sdk 'ndk;28.2.13676358'
+    $sm = Get-ChildItem (Join-Path $sdk 'cmdline-tools') -Recurse -Filter sdkmanager.bat -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    $smPath = if ($sm) { $sm.FullName } else {
+        $cmd = Get-Command sdkmanager.bat -ErrorAction SilentlyContinue
+        if ($cmd) { $cmd.Source } else { $null }
+    }
+    if (-not $smPath) { throw "NDK 28.2 is missing and sdkmanager.bat was not found under $sdk" }
+    & $smPath --sdk_root=$sdk 'ndk;28.2.13676358'
+    if ($LASTEXITCODE) { throw "sdkmanager could not install ndk;28.2.13676358 (exit $LASTEXITCODE)" }
+}
+if (-not (Test-Path (Join-Path $ndk 'build\cmake\android.toolchain.cmake'))) {
+    throw "NDK 28.2 still missing after setup: $ndk"
 }
 Write-Host "done"

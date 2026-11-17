@@ -1,0 +1,169 @@
+name: Build BasaraPortStable (native)
+
+# Recompiles the game and builds libmain.so. Manual only: it needs sys/main.dol from your own
+# disc, which this repository does not (and cannot) contain. For game-code or renderer changes.
+on:
+  workflow_dispatch:
+    inputs:
+      assets_url:
+        description: 'Direct URL of your own main.dol (or a zip with it); overrides BASARA_ASSETS_URL'
+        required: false
+        type: string
+      build_main10:
+        description: 'Also build libmain10.so (Renderer: WebGPU 1.0)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NDK_VERSION: '28.2.13676358'
+  DOL_SHA256: 'df624991eccb323613f05604032246d71b065e3d5459a20010e1920cd7f3b316'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 330
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-34 build-tools;34.0.0 ndk;${{ env.NDK_VERSION }}'
+
+      # The port recompiles the game, so the build needs sys/main.dol from a legally acquired disc.
+      # The repository keeps no game data: point the BASARA_ASSETS_URL repository variable (or a
+      # secret) at a direct download of your own main.dol, or a zip that contains it, or pass
+      # assets_url when running this workflow by hand. A private host may need BASARA_ASSETS_TOKEN.
+      - name: Import game files
+        shell: pwsh
+        env:
+          ASSETS_URL: ${{ inputs.assets_url || vars.BASARA_ASSETS_URL || secrets.BASARA_ASSETS_URL }}
+          ASSETS_TOKEN: ${{ secrets.BASARA_ASSETS_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dol = 'assets/basara-heroes/sys/main.dol'
+          if (Test-Path $dol) {
+            Write-Host 'main.dol is already in the checkout'
+          } elseif (-not $env:ASSETS_URL) {
+            throw 'No game files: set the BASARA_ASSETS_URL repository variable to a direct URL of your own main.dol (or a .zip containing it), or run the workflow by hand with assets_url. This repository cannot ship game data.'
+          } else {
+            $tmp = Join-Path $env:RUNNER_TEMP 'basara-assets'
+            New-Item -ItemType Directory -Force $tmp | Out-Null
+            $dl = Join-Path $tmp 'download'
+            $headers = @{}
+            if ($env:ASSETS_TOKEN) { $headers['Authorization'] = "Bearer $env:ASSETS_TOKEN" }
+            Invoke-WebRequest -UseBasicParsing -Uri $env:ASSETS_URL -Headers $headers -OutFile $dl
+            # A zip starts with PK; a DOL starts with its text-section offset.
+            $magic = [IO.File]::ReadAllBytes($dl)[0..1]
+            if ($magic[0] -eq 0x50 -and $magic[1] -eq 0x4B) {
+              Expand-Archive -LiteralPath $dl -DestinationPath $tmp -Force
+              $found = Get-ChildItem $tmp -Recurse -Filter 'main.dol' | Select-Object -First 1
+              if (-not $found) { throw 'The downloaded zip contains no main.dol' }
+              $src = $found.FullName
+            } else {
+              $src = $dl
+            }
+            New-Item -ItemType Directory -Force (Split-Path $dol) | Out-Null
+            Copy-Item $src $dol -Force
+          }
+          $hash = (Get-FileHash $dol -Algorithm SHA256).Hash.ToLowerInvariant()
+          Write-Host "main.dol SHA-256: $hash"
+          if ($hash -ne $env:DOL_SHA256) {
+            throw "main.dol is not RBSJ08: expected $env:DOL_SHA256, got $hash"
+          }
+
+      - name: Setup toolchain
+        shell: pwsh
+        run: ./tools/setup-android.ps1
+
+      - name: Build translator
+        shell: pwsh
+        run: dotnet build translator/Translator.sln -c Release
+
+      - name: Translate PowerPC to C++
+        shell: pwsh
+        run: ./tools/b-translate.ps1
+
+      - name: Configure native (main)
+        shell: pwsh
+        run: |
+          $ndk = Join-Path $env:ANDROID_SDK_ROOT "ndk\$env:NDK_VERSION"
+          ./tools/b-android.ps1 -Mode configure -Ndk $ndk
+
+      - name: Build native (main)
+        shell: pwsh
+        run: |
+          $ndk = Join-Path $env:ANDROID_SDK_ROOT "ndk\$env:NDK_VERSION"
+          ./tools/b-android.ps1 -Mode build -Ndk $ndk -Jobs 4
+
+      - name: Stage native (main)
+        shell: pwsh
+        run: |
+          $ndk = Join-Path $env:ANDROID_SDK_ROOT "ndk\$env:NDK_VERSION"
+          ./tools/b-android.ps1 -Mode stage -Ndk $ndk
+
+      - name: Configure native (WebGPU 1.0)
+        if: inputs.build_main10
+        shell: pwsh
+        run: |
+          $ndk = Join-Path $env:ANDROID_SDK_ROOT "ndk\$env:NDK_VERSION"
+          $aurora10 = (Join-Path (Get-Location) 'aurora10').Replace('\', '/')
+          ./tools/b-android.ps1 -Mode configure -Ndk $ndk -BuildDir generated\android-build10 `
+            -Extra "-DMKW_AURORA_DIR=$aurora10"
+
+      - name: Build native (WebGPU 1.0)
+        if: inputs.build_main10
+        shell: pwsh
+        run: |
+          $ndk = Join-Path $env:ANDROID_SDK_ROOT "ndk\$env:NDK_VERSION"
+          ./tools/b-android.ps1 -Mode build -Ndk $ndk -Jobs 4 -BuildDir generated\android-build10
+
+      - name: Stage native (WebGPU 1.0)
+        if: inputs.build_main10
+        shell: pwsh
+        run: |
+          $ndk = Join-Path $env:ANDROID_SDK_ROOT "ndk\$env:NDK_VERSION"
+          ./tools/b-android.ps1 -Mode stage10 -Ndk $ndk -BuildDir generated\android-build10
+
+      - name: Build APK
+        shell: pwsh
+        run: |
+          cd app
+          ../third_party/gradle/bin/gradle.bat assembleRelease "-PbasaraVersionName=1.2.2-stable" "-PbasaraVersionCode=51" --no-daemon --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: BasaraPortStable-native-apk-${{ github.run_number }}
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Upload build logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: BasaraPortStable-native-logs-${{ github.run_number }}
+          path: |
+            generated/b/*.log
+            generated/b/*.txt
+          if-no-files-found: ignore
