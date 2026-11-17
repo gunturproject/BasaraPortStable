@@ -62,16 +62,24 @@ jobs:
           du -sh "$libs" generated/android-native/assets/runtime
 
       - name: Stage signing keystore
-        if: ${{ secrets.BASARA_KEYSTORE_BASE64 != '' }}
+        env:
+          B64: ${{ secrets.BASARA_KEYSTORE_BASE64 }}
+          PASS: ${{ secrets.BASARA_KEYSTORE_PASSWORD }}
+          ALIAS: ${{ secrets.BASARA_KEY_ALIAS }}
+          KEYPASS: ${{ secrets.BASARA_KEY_PASSWORD }}
         shell: bash
         run: |
           set -euo pipefail
-          echo "${{ secrets.BASARA_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/basara-release.jks"
+          if [ -z "${B64:-}" ]; then
+            echo "No signing keystore secret set; building debug-signed."
+            exit 0
+          fi
+          echo "$B64" | base64 -d > "$RUNNER_TEMP/basara-release.jks"
           {
             echo "BASARA_KEYSTORE=$RUNNER_TEMP/basara-release.jks"
-            echo "BASARA_KEYSTORE_PASSWORD=${{ secrets.BASARA_KEYSTORE_PASSWORD }}"
-            echo "BASARA_KEY_ALIAS=${{ secrets.BASARA_KEY_ALIAS }}"
-            echo "BASARA_KEY_PASSWORD=${{ secrets.BASARA_KEY_PASSWORD }}"
+            echo "BASARA_KEYSTORE_PASSWORD=$PASS"
+            echo "BASARA_KEY_ALIAS=$ALIAS"
+            echo "BASARA_KEY_PASSWORD=$KEYPASS"
           } >> "$GITHUB_ENV"
 
       - name: Build APK
