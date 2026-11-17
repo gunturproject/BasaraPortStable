@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: app-${{ github.ref }}
@@ -96,3 +96,20 @@ jobs:
           name: BasaraPortStable-apk-${{ github.run_number }}
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
+
+      - name: Publish release with APK
+        if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          apk=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          sha256sum "$apk" > "$apk.sha256"
+          tag="v1.2.3-stable"
+          title="BasaraPortStable 1.2.3-stable (build ${{ github.run_number }})"
+          # Re-create the tag/release for this build so the APK stays current.
+          gh release delete "$tag" --yes 2>/dev/null || true
+          gh release create "$tag" "$apk" "$apk.sha256" \
+            --title "$title" --notes "Signed APK (release keystore). SHA-256 in the .sha256 file." \
+            --prerelease 2>&1 | tail -5
