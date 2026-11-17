@@ -38,6 +38,7 @@ final class ReleaseNotes {
         new Entry("1.2.3", "Mali stability and a Helio G99 graphics option", "2026-11-17",
                 new String[] {
                     "Performance > Fast Graphics Cores (Experimental): lets the render thread use the game's fast CPU cores, not only the little ones. On a Helio G99 one of the two fast cores sits idle while the other draws, so busy battles can run faster. The phone runs warmer with it on, and it is off by default.",
+                    "Performance > Smooth Audio: a larger audio buffer and no low-latency path, so the sound stays steady instead of crackling or stuttering on a slow phone. Try it if you hear crackling (recak-recak).",
                     "If the GPU stops responding when Render Resolution is already at its lowest, Display Resolution now drops one step for the next start instead of only telling you.",
                 },
                 new String[] {

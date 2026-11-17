@@ -779,6 +779,11 @@ final class SettingsMenu {
                         : Tr.t("Not available: this phone does not offer it."),
                 settings.sustainedPerformance(), sustained, on -> settings.setSustainedPerformance(on));
         restart(null);
+        toggleRow(Tr.t("Smooth Audio"), Tr.t("Uses a larger audio buffer and skips the low-latency path, so the "
+                        + "sound stays steady instead of crackling or stuttering on a slow phone. A little more "
+                        + "delay. Try it if you hear crackling (recak-recak)."),
+                settings.recordingAudio(), on -> settings.setRecordingAudio(on));
+        restart(null);
         choiceRow(Tr.t("Upload Memory"), Tr.t("Vulkan renderer: the memory the game writes its graphics data into. "
                         + "Auto measures at start which one is faster on this phone. Standard suits most phones, "
                         + "Cached helps some slow ones."),

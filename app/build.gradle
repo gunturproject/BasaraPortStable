@@ -47,11 +47,27 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            def ks = System.getenv('BASARA_KEYSTORE')
+            if (ks != null) {
+                storeFile file(ks)
+                storePassword System.getenv('BASARA_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('BASARA_KEY_ALIAS') ?: 'basara'
+                keyPassword System.getenv('BASARA_KEY_PASSWORD') ?: System.getenv('BASARA_KEYSTORE_PASSWORD')
+            }
+        }
+    }
+
     buildTypes {
         release {
-            minifyEnabled false
-            // Personal builds: sign with the local debug key so the APK installs directly.
-            signingConfig signingConfigs.debug
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Sign with the release keystore when one is staged (CI sets BASARA_KEYSTORE); otherwise
+            // fall back to the debug key so local/personal builds still install.
+            signingConfig (System.getenv('BASARA_KEYSTORE') != null
+                    ? signingConfigs.release : signingConfigs.debug)
         }
     }
 
